@@ -25,19 +25,14 @@ The Subtitle Composer application includes the following features:
 - Selecting a subtitle from the subtitle table moves the playback to the time when the subtitle is displayed.
 
 **Video Player Controls** 
-- "Play," "Pause," and "Stop" buttons perform their respective actions, utilizing the provided graphics: "play.png," "pause.png," "stop.png."
 - Text displaying the current playback position in the format "hh:mm:ss.ff."
 - Slider showing the current playback position, allowing the user to change it.
 - Slider showing the current volume, allowing the user to adjust it.
 
 **Video Player Subtitles**
 - Subtitles are displayed above the video player in the bottom center.
-- The subtitle text is centered.
-- The subtitles are displayed in white color.
-- The background of the subtitles is black with 50% transparency.
-- The padding of the subtitles is set to 5px.
-- At a given time "t," all subtitles that should appear before time "t" and disappear after time "t" are displayed.
-- If multiple subtitles should be shown at the same time, they are displayed one below the other in the order of their appearance.
+- At a given time "t" all subtitles that should appear before time "t" and disappear after time "t" are displayed.
+- If multiple subtitles are be shown at the same time, they are displayed one below the other in the order of their appearance.
 
 **Subtitle Table - Context Menu**
 - "Add" option: Adds a subtitle with the maximum hiding time as the show and hide time.
