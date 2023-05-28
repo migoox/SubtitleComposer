@@ -14,6 +14,7 @@ namespace SubtitleComposer
         public event PropertyChangedEventHandler? PropertyChanged;
 
         private bool _showTranslation = false;
+        
 
         public bool ShowTranslation
         {
@@ -24,6 +25,37 @@ namespace SubtitleComposer
             set
             {
                 _showTranslation = value;
+                OnPropertyChanged();
+            }
+        }
+
+
+        private bool _videoIsPlaying = false;
+
+        public bool VideoIsPlaying
+        {
+            get
+            {
+                return _videoIsPlaying;
+            }
+            set
+            {
+                _videoIsPlaying = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private TimeSpan _videoTotalTime = new TimeSpan(0, 0, 0);
+
+        public TimeSpan VideoTotalTime
+        {
+            get
+            {
+                return _videoTotalTime;
+            }
+            set
+            {
+                _videoTotalTime = value;
                 OnPropertyChanged();
             }
         }

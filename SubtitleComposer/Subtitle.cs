@@ -41,7 +41,7 @@ namespace SubtitleComposer
             set
             {
                 _hideTime = value;
-
+                
                 // notify itself
                 OnPropertyChanged();
 

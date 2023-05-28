@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.DirectoryServices.ActiveDirectory;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace SubtitleComposer
 {
@@ -16,12 +18,14 @@ namespace SubtitleComposer
         public ObservableCollection<Subtitle> Subtitles { get; set; } = new ObservableCollection<Subtitle>();
         public AppProperties AppProperties { get; set; } = new AppProperties();
 
-        public bool VideoIsPlaying { get; set; } = false;
+        // timer that runs on the UI thread and raises events at specified intervals
+        private DispatcherTimer _videoTimer = new DispatcherTimer();
 
         public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
+            UpdateVideoElapsedTimeTextBlock();
         }
 
         private void FileOpenMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -29,15 +33,16 @@ namespace SubtitleComposer
             var dialog = new Microsoft.Win32.OpenFileDialog();
             dialog.FileName = "Document";
             dialog.DefaultExt = ".mp4";
-            dialog.Filter = "Video Files (*.mp4;*.mkv;*.avi;*.wmv;*.mov)|*.mp4;*.mkv;*.avi;*.wmv;*.mov|All Files (*.*)|*.*"; 
-            
+            dialog.Filter =
+                "Video Files (*.mp4;*.mkv;*.avi;*.wmv;*.mov)|*.mp4;*.mkv;*.avi;*.wmv;*.mov|All Files (*.*)|*.*";
+
             bool? result = dialog.ShowDialog();
 
             if (result == true)
             {
-                this.VideoPlayer.Source = new Uri(dialog.FileName);
-                this.VideoPlayer.Play();
-                VideoIsPlaying = true;
+                VideoPlayer.Source = new Uri(dialog.FileName);
+                VideoPlayer.Play();
+                AppProperties.VideoIsPlaying = true;
             }
         }
 
@@ -48,15 +53,13 @@ namespace SubtitleComposer
 
         private void VideoPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (VideoIsPlaying)
+            if (AppProperties.VideoIsPlaying)
             {
-                VideoPlayer.Pause();
-                VideoIsPlaying = false;
+                this.PauseVideo();
             }
             else
             {
-                this.VideoPlayer.Play();
-                VideoIsPlaying = true;
+                this.PlayVideo();
             }
         }
 
@@ -80,6 +83,34 @@ namespace SubtitleComposer
             }
         }
 
+        private void PlayVideo()
+        {
+            VideoPlayer.Play();
+            AppProperties.VideoIsPlaying = true;
+            _videoTimer.Start();
+        }
+
+        private void StopVideo()
+        {
+            VideoPlayer.Stop();
+            AppProperties.VideoIsPlaying = false;
+            _videoTimer.Stop();
+            UpdateVideoElapsedTimeTextBlock();
+        }
+
+        private void PauseVideo()
+        {
+            VideoPlayer.Pause();
+            AppProperties.VideoIsPlaying = false;
+            _videoTimer.Stop();
+            UpdateVideoElapsedTimeTextBlock();
+        }
+
+        private void UpdateVideoElapsedTimeTextBlock()
+        {
+            ElapsedTimeTextBlock.Text = VideoPlayer.Position.ToString("h\\:mm\\:ss\\.ff");
+        }
+
         private void MainDataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (MainDataGrid.SelectedItem == null)
@@ -91,8 +122,73 @@ namespace SubtitleComposer
             var selected = (Subtitle)MainDataGrid.SelectedItem;
 
             VideoPlayer.Pause();
-            VideoIsPlaying = false;
+            AppProperties.VideoIsPlaying = false;
             VideoPlayer.Position = selected.ShowTime;
+        }
+
+        private void AboutMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Author: Michał Okurowski 2023", "Subtitle Composer - About", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void MainDataGrid_OnInitializingNewItem(object sender, InitializingNewItemEventArgs e)
+        {
+            Subtitle item = e.NewItem as Subtitle;
+            if (item == null)
+                return;
+
+            var maxTimeSpan = Subtitles.Select(st => st.HideTime).Max();
+            item.HideTime = maxTimeSpan;
+            item.ShowTime = maxTimeSpan;
+            item.Text = "";
+            item.Translation = "";
+        }
+
+        private void VideoPlayButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            this.PlayVideo();
+        }
+
+        private void VideoStopButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            this.StopVideo();
+        }
+
+        private void VideoPauseButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            this.PauseVideo();
+        }
+
+        private void VideoPlayer_OnMediaOpened(object sender, RoutedEventArgs e)
+        {
+            AppProperties.VideoTotalTime = VideoPlayer.NaturalDuration.TimeSpan;
+
+            _videoTimer = new DispatcherTimer();
+            _videoTimer.Interval = TimeSpan.FromMilliseconds(100);
+            _videoTimer.Tick += Timer_Tick;
+            
+            this.PlayVideo();
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            // temporarily unsubscribe the event (on value changed event will be produced only on user slider value change)
+            VideoPlayerSlider.ValueChanged -= VideoPlayerSlider_OnValueChanged;
+
+            VideoPlayerSlider.Value = VideoPlayer.Position.TotalMilliseconds / AppProperties.VideoTotalTime.TotalMilliseconds;
+
+            UpdateVideoElapsedTimeTextBlock();
+
+            VideoPlayerSlider.ValueChanged += VideoPlayerSlider_OnValueChanged;
+
+        }
+
+        private void VideoPlayerSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+
+            int totalMilliseconds = (int)(VideoPlayerSlider.Value * AppProperties.VideoTotalTime.TotalMilliseconds);
+            VideoPlayer.Position = TimeSpan.FromMilliseconds(totalMilliseconds);
+            UpdateVideoElapsedTimeTextBlock();
         }
     }
 }

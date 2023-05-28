@@ -39,35 +39,84 @@
                           IsCheckable="True" IsChecked="{Binding Path=AppProperties.ShowTranslation, Mode=TwoWay, NotifyOnSourceUpdated=True}"/> 
             </MenuItem>
             <MenuItem Header="_Help">
-                <MenuItem Header="About..." />
+                <MenuItem Name="AboutMenuItem" Header="About..." Click="AboutMenuItem_OnClick"/>
             </MenuItem>
         </Menu>
 
-        <Canvas Name="VideoPlayerCanvas"  Grid.Row="1">
-            <Rectangle Fill="Black" 
-                       Width="{Binding ActualWidth, ElementName=VideoPlayerCanvas}"
-                       Height="{Binding ActualHeight, ElementName=VideoPlayerCanvas}"
-                       Canvas.ZIndex="0" />
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <Grid Width="{Binding ActualWidth, ElementName=VideoPlayerCanvas}" 
-                  Height="{Binding ActualHeight, ElementName=VideoPlayerCanvas}" 
-                  Canvas.ZIndex="1" >
+            <Canvas Name="VideoPlayerCanvas" Grid.Row="0">
+                <Rectangle Fill="Black" 
+                           Width="{Binding ActualWidth, ElementName=VideoPlayerCanvas}"
+                           Height="{Binding ActualHeight, ElementName=VideoPlayerCanvas}"
+                           Canvas.ZIndex="0" />
+
+                <Grid Width="{Binding ActualWidth, ElementName=VideoPlayerCanvas}" 
+                      Height="{Binding ActualHeight, ElementName=VideoPlayerCanvas}" 
+                      Canvas.ZIndex="1" >
+                    
+                    <MediaElement Grid.Row="1" Name="VideoPlayer" LoadedBehavior="Manual" 
+                                  Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Canvas}}" 
+                                  ScrubbingEnabled="True"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                  MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" 
+                                  MouseWheel="VideoPlayer_OnMouseWheel" 
+                                  MediaOpened="VideoPlayer_OnMediaOpened"/>
+                </Grid>
+
+            </Canvas>
+
+            <DockPanel Grid.Row="1"
+                       HorizontalAlignment="Stretch" 
+                       VerticalAlignment="Stretch" 
+                       Height="Auto" LastChildFill="True">
+
+                <Button DockPanel.Dock="Left" Name="VideoPlayButton" VerticalAlignment="Center"
+                        Height="28" Width="28" Margin="4" Click="VideoPlayButton_OnClick" >
+                    <Image Source="Resources/play.png" RenderOptions.BitmapScalingMode="HighQuality"/>
+                </Button>
+                <Button DockPanel.Dock="Left" Name="VideoPauseButton" VerticalAlignment="Center"
+                        Height="28" Width="28" Margin="4" Click="VideoPauseButton_OnClick">
+                    <Image Source="Resources/pause.png" RenderOptions.BitmapScalingMode="HighQuality" />
+                </Button>
+                <Button DockPanel.Dock="Left" Name="VideoStopButton" VerticalAlignment="Center"
+                        Height="28" Width="28" Margin="4" Click="VideoStopButton_OnClick">
+                    <Image Source="Resources/stop.png" RenderOptions.BitmapScalingMode="HighQuality" />
+                </Button>
                 
-                <MediaElement Grid.Row="1" Name="VideoPlayer" LoadedBehavior="Manual" 
-                              Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Canvas}}" 
-                              ScrubbingEnabled="True"
-                              HorizontalAlignment="Center" VerticalAlignment="Center" 
-                              MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" 
-                              MouseWheel="VideoPlayer_OnMouseWheel"/>
-            </Grid>
+                <!-- text of this TextBlock is controlled via backend code -->
+                <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="4"
+                           Name="ElapsedTimeTextBlock" Width="100" />
 
-        </Canvas>
 
+                <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Margin="4"
+                           Name="DurationTimeTextBlock" 
+                           Text="{Binding Path=AppProperties.VideoTotalTime, Converter={StaticResource TimeSpanToStringConverter}}" Width="100" />
+
+                <!-- value of this Slider is controlled via backend code -->
+                <Slider DockPanel.Dock="Left"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Stretch"
+                        Margin="4"
+                        Name="VideoPlayerSlider"
+                        ValueChanged="VideoPlayerSlider_OnValueChanged" 
+                        IsMoveToPointEnabled="True" 
+                        AllowDrop="True" 
+                        Minimum="0"
+                        Maximum="1"/>
+            </DockPanel>
+
+        </Grid>
         <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" />
 
         <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
 
-        <DataGrid Grid.Row="3" Name="MainDataGrid" ItemsSource="{Binding Path=Subtitles}" AutoGenerateColumns="False" CanUserAddRows="True" SelectionChanged="MainDataGrid_OnSelectionChanged">
+        <DataGrid Grid.Row="3" Name="MainDataGrid" InitializingNewItem="MainDataGrid_OnInitializingNewItem"
+                  ItemsSource="{Binding Path=Subtitles}" AutoGenerateColumns="False" CanUserAddRows="True" SelectionChanged="MainDataGrid_OnSelectionChanged">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Show Time" 
                                     Binding="{Binding ShowTime, Mode=TwoWay, NotifyOnSourceUpdated=True, UpdateSourceTrigger=LostFocus, Converter={StaticResource TimeSpanToStringConverter}}" 

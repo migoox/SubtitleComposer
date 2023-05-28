@@ -7,4 +7,19 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Resources\pause.png" />
+    <None Remove="Resources\play.png" />
+    <None Remove="Resources\stop.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\stop.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\pause.png" />
+    <Resource Include="Resources\play.png" />
+  </ItemGroup>
+
 </Project>
