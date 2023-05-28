@@ -18,7 +18,7 @@ Compiled .dll file should be placed in `plugins` folder.
 
 The Subtitle Composer application includes the following features:
 
-**Video Player (2 points)**
+**Video Player**
 - The "Open" menu item allows selecting and opening a video file.
 - Scrolling the mouse wheel over the video player controls the video volume.
 - Clicking on the video player toggles between play and pause.
