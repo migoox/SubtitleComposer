@@ -1,0 +1,157 @@
+﻿<Window x:Class="SubtitleComposer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SubtitleComposer"
+        mc:Ignorable="d"
+        Title="Subtitle Composer" Width="1280" Height="800" MinWidth="640" MinHeight="480" WindowStartupLocation="CenterScreen">
+
+    <Grid>
+        <Grid.Resources>
+            <FrameworkElement x:Key="ProxyElement" DataContext="{Binding Path=AppProperties.ShowTranslation}"/>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <local:BooleanToGridLengthConverter x:Key="BooleanToGridLengthConverter" />
+            <local:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="0.5*" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="0.5*" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="100" MinHeight="100"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Name="FileOpenMenuItem"  Header="Open..." Click="FileOpenMenuItem_OnClick"/>
+                <Separator />
+                <MenuItem Name="FileCloseMenuItem" Header="Exit..." Click="FileCloseMenuItem_OnClick"/>
+            </MenuItem>
+            <MenuItem Header="_Subtitles">
+                <MenuItem Header="Open" />
+                <MenuItem Header="Save" />
+                <MenuItem Header="Save Translation" IsEnabled="False" />
+                <Separator />
+                <MenuItem Name="TranslationMenuItem" Header="Translation" 
+                          IsCheckable="True" IsChecked="{Binding Path=AppProperties.ShowTranslation, Mode=TwoWay, NotifyOnSourceUpdated=True}"/> 
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="About..." />
+            </MenuItem>
+        </Menu>
+
+        <Canvas Name="VideoPlayerCanvas"  Grid.Row="1">
+            <Rectangle Fill="Black" 
+                       Width="{Binding ActualWidth, ElementName=VideoPlayerCanvas}"
+                       Height="{Binding ActualHeight, ElementName=VideoPlayerCanvas}"
+                       Canvas.ZIndex="0" />
+
+            <Grid Width="{Binding ActualWidth, ElementName=VideoPlayerCanvas}" 
+                  Height="{Binding ActualHeight, ElementName=VideoPlayerCanvas}" 
+                  Canvas.ZIndex="1" >
+                
+                <MediaElement Grid.Row="1" Name="VideoPlayer" LoadedBehavior="Manual" 
+                              Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Canvas}}" 
+                              ScrubbingEnabled="True"
+                              HorizontalAlignment="Center" VerticalAlignment="Center" 
+                              MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" 
+                              MouseWheel="VideoPlayer_OnMouseWheel"/>
+            </Grid>
+
+        </Canvas>
+
+        <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" />
+
+        <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
+
+        <DataGrid Grid.Row="3" Name="MainDataGrid" ItemsSource="{Binding Path=Subtitles}" AutoGenerateColumns="False" CanUserAddRows="True" SelectionChanged="MainDataGrid_OnSelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Show Time" 
+                                    Binding="{Binding ShowTime, Mode=TwoWay, NotifyOnSourceUpdated=True, UpdateSourceTrigger=LostFocus, Converter={StaticResource TimeSpanToStringConverter}}" 
+                                    Width="Auto" 
+                                    SortDirection="Ascending" 
+                                    CanUserSort="False" />
+
+                <DataGridTextColumn Header="Hide Time" 
+                                    Binding="{Binding HideTime, Mode=TwoWay, NotifyOnSourceUpdated=True, UpdateSourceTrigger=LostFocus, Converter={StaticResource TimeSpanToStringConverter}}" 
+                                    Width="Auto"
+                                    CanUserSort="False" />
+
+                <DataGridTextColumn Header="Text" 
+                                    Binding="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" 
+                                    Width="0.5*" 
+                                    CanUserSort="False" />
+
+                <DataGridTextColumn Header="Translation" 
+                                    Binding="{Binding Translation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" 
+                                    Width="0.5*" 
+                                    Visibility="{Binding Source={StaticResource ProxyElement}, Path=DataContext, 
+                                                         Converter={StaticResource BooleanToVisibilityConverter}, NotifyOnSourceUpdated=True}" 
+                                    CanUserSort="False" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch" />
+
+        <Grid Grid.Row ="5" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="{Binding Path=AppProperties.ShowTranslation, Converter={StaticResource BooleanToGridLengthConverter}, Mode=OneWay, NotifyOnSourceUpdated=True}"/>
+            </Grid.ColumnDefinitions>
+
+            <GroupBox VerticalAlignment="Center" Grid.Column="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" FontWeight="Bold" Content="Show"/>
+                    <Label Grid.Row="1" Grid.Column="0" FontWeight="Bold" Content="Hide"/>
+                    <Label Grid.Row="2" Grid.Column="0" FontWeight="Bold" Content="Duration"/>
+
+                    <TextBox Grid.Row="0" Grid.Column="1" 
+                             Text="{Binding ElementName=MainDataGrid, Path=SelectedItem.ShowTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True, Converter={StaticResource TimeSpanToStringConverter}}" Width="100" Height="20" />
+                    <TextBox Grid.Row="1" Grid.Column="1" 
+                             Text="{Binding ElementName=MainDataGrid, Path=SelectedItem.HideTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True, Converter={StaticResource TimeSpanToStringConverter}}" Width="100" Height="20" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Name="DurationTextBox" 
+                             Text="{Binding ElementName=MainDataGrid, Path=SelectedItem.Duration, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True, Converter={StaticResource TimeSpanToStringConverter}}" Width="100" Height="20" />
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Column="1">
+                <GroupBox.Header>
+                    <TextBlock Text="{Binding ElementName=TextTextBox, Mode=OneWay, Path=Text.Length, StringFormat='Text: {0} characters'}" />
+                </GroupBox.Header>
+                <TextBox Name="TextTextBox"
+                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                         Text="{Binding ElementName=MainDataGrid, Path=SelectedItem.Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" 
+                         AcceptsReturn="True" 
+                         VerticalScrollBarVisibility="Auto"
+                         TextWrapping="Wrap" TextAlignment="Center" />
+            </GroupBox>
+
+            <GroupBox HorizontalAlignment="Stretch" Grid.Column="2" Visibility="{Binding Path=AppProperties.ShowTranslation, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay, NotifyOnSourceUpdated=True}">
+                <GroupBox.Header>
+                    <TextBlock Text="{Binding ElementName=TranslationTextBox, Mode=OneWay, Path=Text.Length, StringFormat='Translation: {0} characters'}" />
+                </GroupBox.Header>
+                <TextBox Name="TranslationTextBox"
+                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                         Text="{Binding ElementName=MainDataGrid, Path=SelectedItem.Translation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" 
+                         AcceptsReturn="True" 
+                         VerticalScrollBarVisibility="Auto"
+                         TextWrapping="Wrap" TextAlignment="Center" />
+            </GroupBox>
+
+        </Grid>
+    </Grid>
+</Window>
