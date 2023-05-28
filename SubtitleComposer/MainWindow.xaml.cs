@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace SubtitleComposer
@@ -19,7 +24,11 @@ namespace SubtitleComposer
         public AppProperties AppProperties { get; set; } = new AppProperties();
 
         // timer that runs on the UI thread and raises events at specified intervals
+        // used in order to update slider and textblock
         private DispatcherTimer _videoTimer = new DispatcherTimer();
+
+        // used in order to update displayed subtitles
+        private DispatcherTimer _subtitlesTimer = new DispatcherTimer();
 
         public MainWindow()
         {
@@ -27,6 +36,7 @@ namespace SubtitleComposer
             DataContext = this;
             UpdateVideoElapsedTimeTextBlock();
         }
+
 
         private void FileOpenMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
@@ -146,6 +156,7 @@ namespace SubtitleComposer
             item.ShowTime = maxTimeSpan;
             item.Text = "";
             item.Translation = "";
+            item.IsDisplayed = false;
         }
 
         private void VideoPlayButton_OnClick(object sender, RoutedEventArgs e)
@@ -168,15 +179,21 @@ namespace SubtitleComposer
             AppProperties.VideoTotalTime = VideoPlayer.NaturalDuration.TimeSpan;
 
             _videoTimer = new DispatcherTimer();
-            _videoTimer.Interval = TimeSpan.FromMilliseconds(100);
-            _videoTimer.Tick += Timer_Tick;
+            _videoTimer.Interval = TimeSpan.FromMilliseconds(10);
+            _videoTimer.Tick += VideoTimer_Tick;
 
             VideoPlayerVolumeSlider.Value = 1.0 / VideoPlayer.Volume;
+
+            _subtitlesTimer = new DispatcherTimer();
+            _subtitlesTimer.Interval = TimeSpan.FromMilliseconds(100);
+            _subtitlesTimer.Tick += SubtitlesTimer_Tick;
+
+            _subtitlesTimer.Start();
 
             this.PlayVideo();
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void VideoTimer_Tick(object sender, EventArgs e)
         {
             // temporarily unsubscribe the event (on value changed event will be produced only on user slider value change)
             VideoPlayerSlider.ValueChanged -= VideoPlayerSlider_OnValueChanged;
@@ -186,6 +203,38 @@ namespace SubtitleComposer
             UpdateVideoElapsedTimeTextBlock();
 
             VideoPlayerSlider.ValueChanged += VideoPlayerSlider_OnValueChanged;
+        }
+
+        private void SubtitlesTimer_Tick(object sender, EventArgs e)
+        {
+            StringBuilder subtitlesBuilder = new StringBuilder();
+
+            foreach (var subtitle in Subtitles
+                         .Select(st => st)
+                         .Where(st=> st.ShowTime <= VideoPlayer.Position && st.HideTime >= VideoPlayer.Position && st.Text != "")
+                         .OrderBy(st => st.ShowTime))
+            {
+                subtitlesBuilder.Append(subtitle.Text).Append("\n");
+            }
+
+            if (subtitlesBuilder.Length != 0)
+            {
+                subtitlesBuilder.Remove(subtitlesBuilder.Length - 1, 1);
+                this.VideoSubtitlesTextBlock.Text = subtitlesBuilder.ToString();
+            }
+            else
+            {
+                this.VideoSubtitlesTextBlock.Text = "";
+            }
+
+            if (this.VideoSubtitlesTextBlock.Text == "")
+            {
+                VideoSubtitlesTextBlock.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                VideoSubtitlesTextBlock.Visibility = Visibility.Visible;
+            }
         }
 
         private void VideoPlayerSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
