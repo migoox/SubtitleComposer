@@ -1,5 +1,5 @@
 # Subtitle Composer
-Subtitle Composer is an application designed for creating and editing subtitles for movies, as well as their translations, developed in C# with WPF. The application allows you to load a video file and create synchronized subtitles for it. Additionally, it supports creating custom plugins with the ".dll" extension by implementing the following interface in Class Library project:
+Subtitle Composer is an application designed for creating and editing subtitles for movies, as well as their translations, developed in with C# and WPF. The application allows you to load a video file and create synchronized subtitles for it. Additionally, it supports creating custom plugins with the ".dll" extension by implementing the following interface in Class Library project:
 ```cs
 public interface ISubtitlesPlugin
 {
