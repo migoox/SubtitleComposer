@@ -12,25 +12,6 @@ namespace SubtitleComposer
         // Declare event
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private bool _isDisplayed = false;
-        public bool IsDisplayed
-        {
-            get
-            {
-                return _isDisplayed;
-            }
-            set
-            {
-                if (_isDisplayed == value)
-                    return;
-
-                _isDisplayed = value;
-
-                // notify itself
-                OnPropertyChanged();
-            }
-        }
-
         private TimeSpan _showTime = new TimeSpan(0, 0, 0);
 
         public TimeSpan ShowTime

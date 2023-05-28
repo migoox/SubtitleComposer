@@ -37,7 +37,6 @@ namespace SubtitleComposer
             UpdateVideoElapsedTimeTextBlock();
         }
 
-
         private void FileOpenMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
             var dialog = new Microsoft.Win32.OpenFileDialog();
@@ -156,7 +155,6 @@ namespace SubtitleComposer
             item.ShowTime = maxTimeSpan;
             item.Text = "";
             item.Translation = "";
-            item.IsDisplayed = false;
         }
 
         private void VideoPlayButton_OnClick(object sender, RoutedEventArgs e)
@@ -247,6 +245,46 @@ namespace SubtitleComposer
         private void VideoPlayerVolumeSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             VideoPlayer.Volume = VideoPlayerVolumeSlider.Value;
+        }
+
+        private void AddDataGridContextMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            TimeSpan maxTimeSpan;
+            if (Subtitles.Count == 0)
+            {
+                maxTimeSpan = new TimeSpan(0, 0, 0);
+            }
+            else
+            {
+                maxTimeSpan = Subtitles.Select(st => st.HideTime).Max();
+            }
+
+            Subtitles.Add(new Subtitle(maxTimeSpan, maxTimeSpan, "", ""));
+        }
+
+        private void AddAfterDataGridContextMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            TimeSpan maxTimeSpan = new TimeSpan(0,0,0);
+
+            foreach (var elem in MainDataGrid.SelectedItems)
+            {
+                var subtitle = (Subtitle)elem;
+                if (subtitle.HideTime > maxTimeSpan)
+                {
+                    maxTimeSpan = subtitle.HideTime;
+                }
+            }
+
+            Subtitles.Add(new Subtitle(maxTimeSpan, maxTimeSpan, "", ""));
+        }
+
+        private void DeleteDataGridContextMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            while (MainDataGrid.SelectedItems.Count > 0)
+            {
+                var subtitle = (Subtitle)MainDataGrid.SelectedItems[MainDataGrid.SelectedItems.Count - 1];
+                Subtitles.Remove(subtitle);
+            }
         }
     }
 }

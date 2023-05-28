@@ -145,6 +145,13 @@
         <DataGrid Grid.Row="3" Name="MainDataGrid" InitializingNewItem="MainDataGrid_OnInitializingNewItem"
                   ItemsSource="{Binding Path=Subtitles}" AutoGenerateColumns="False" CanUserAddRows="True" 
                   SelectionChanged="MainDataGrid_OnSelectionChanged">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Name="AddDataGridContextMenuItem" Header="Add" Click="AddDataGridContextMenuItem_OnClick" />
+                    <MenuItem Name="AddAfterDataGridContextMenuItem" Header="Add After" Click="AddAfterDataGridContextMenuItem_OnClick" />
+                    <MenuItem Name="DeleteDataGridContextMenuItem" Header="Delete" Click="DeleteDataGridContextMenuItem_OnClick" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Show Time" 
                                     Binding="{Binding ShowTime, Mode=TwoWay, NotifyOnSourceUpdated=True, UpdateSourceTrigger=LostFocus, Converter={StaticResource TimeSpanToStringConverter}}" 
