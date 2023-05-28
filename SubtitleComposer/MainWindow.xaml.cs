@@ -81,6 +81,10 @@ namespace SubtitleComposer
                 if (VideoPlayer.Volume > 0)
                     VideoPlayer.Volume -= 0.1;
             }
+
+            VideoPlayerSlider.ValueChanged -= VideoPlayerVolumeSlider_OnValueChanged;
+            VideoPlayerVolumeSlider.Value = 1.0 / VideoPlayer.Volume;
+            VideoPlayerSlider.ValueChanged += VideoPlayerVolumeSlider_OnValueChanged;
         }
 
         private void PlayVideo()
@@ -108,7 +112,7 @@ namespace SubtitleComposer
 
         private void UpdateVideoElapsedTimeTextBlock()
         {
-            ElapsedTimeTextBlock.Text = VideoPlayer.Position.ToString("h\\:mm\\:ss\\.ff");
+            ElapsedTimeTextBlock.Text = VideoPlayer.Position.ToString("h\\:mm\\:ss\\.fff");
         }
 
         private void MainDataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -166,7 +170,9 @@ namespace SubtitleComposer
             _videoTimer = new DispatcherTimer();
             _videoTimer.Interval = TimeSpan.FromMilliseconds(100);
             _videoTimer.Tick += Timer_Tick;
-            
+
+            VideoPlayerVolumeSlider.Value = 1.0 / VideoPlayer.Volume;
+
             this.PlayVideo();
         }
 
@@ -180,15 +186,18 @@ namespace SubtitleComposer
             UpdateVideoElapsedTimeTextBlock();
 
             VideoPlayerSlider.ValueChanged += VideoPlayerSlider_OnValueChanged;
-
         }
 
         private void VideoPlayerSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-
             int totalMilliseconds = (int)(VideoPlayerSlider.Value * AppProperties.VideoTotalTime.TotalMilliseconds);
             VideoPlayer.Position = TimeSpan.FromMilliseconds(totalMilliseconds);
             UpdateVideoElapsedTimeTextBlock();
+        }
+
+        private void VideoPlayerVolumeSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            VideoPlayer.Volume = VideoPlayerVolumeSlider.Value;
         }
     }
 }

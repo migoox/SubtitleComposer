@@ -90,13 +90,26 @@
                 
                 <!-- text of this TextBlock is controlled via backend code -->
                 <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="4"
-                           Name="ElapsedTimeTextBlock" Width="100" />
+                           Name="ElapsedTimeTextBlock" 
+                           FontSize="16"/>
 
+                <Slider DockPanel.Dock="Right"
+                        VerticalAlignment="Center"
+                        Width="100"
+                        Margin="4"
+                        Name="VideoPlayerVolumeSlider"
+                        IsMoveToPointEnabled="True" 
+                        ValueChanged="VideoPlayerVolumeSlider_OnValueChanged"
+                        AllowDrop="True" 
+                        Minimum="0"
+                        Maximum="1">
+                </Slider>
 
                 <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Margin="4"
                            Name="DurationTimeTextBlock" 
-                           Text="{Binding Path=AppProperties.VideoTotalTime, Converter={StaticResource TimeSpanToStringConverter}}" Width="100" />
-
+                           Text="{Binding Path=AppProperties.VideoTotalTime, Converter={StaticResource TimeSpanToStringConverter}}" 
+                           FontSize="16" />
+                
                 <!-- value of this Slider is controlled via backend code -->
                 <Slider DockPanel.Dock="Left"
                         VerticalAlignment="Center"
@@ -108,6 +121,8 @@
                         AllowDrop="True" 
                         Minimum="0"
                         Maximum="1"/>
+
+
             </DockPanel>
 
         </Grid>
