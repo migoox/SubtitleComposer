@@ -31,9 +31,10 @@
                 <MenuItem Name="FileCloseMenuItem" Header="Exit..." Click="FileCloseMenuItem_OnClick"/>
             </MenuItem>
             <MenuItem Header="_Subtitles">
-                <MenuItem Header="Open" />
-                <MenuItem Header="Save" />
-                <MenuItem Header="Save Translation" IsEnabled="False" />
+                <MenuItem Name="SubtitlesOpenMenuItem" Header="Open" />
+                <MenuItem Name="SubtitlesSaveMenuItem" Header="Save..." />
+                <MenuItem Name="SubtitlesSaveTranslationMenuItem" Header="Save Translation..." 
+                          IsEnabled="{Binding Path=AppProperties.ShowTranslation, Mode=TwoWay, NotifyOnSourceUpdated=True}" />
                 <Separator />
                 <MenuItem Name="TranslationMenuItem" Header="Translation" 
                           IsCheckable="True" IsChecked="{Binding Path=AppProperties.ShowTranslation, Mode=TwoWay, NotifyOnSourceUpdated=True}"/> 

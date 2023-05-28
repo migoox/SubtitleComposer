@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.DirectoryServices.ActiveDirectory;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,6 +37,7 @@ namespace SubtitleComposer
             InitializeComponent();
             DataContext = this;
             UpdateVideoElapsedTimeTextBlock();
+            InitPlugins();
         }
 
         private void FileOpenMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -51,7 +54,6 @@ namespace SubtitleComposer
             {
                 VideoPlayer.Source = new Uri(dialog.FileName);
                 VideoPlayer.Play();
-                AppProperties.VideoIsPlaying = true;
             }
         }
 
@@ -286,5 +288,110 @@ namespace SubtitleComposer
                 Subtitles.Remove(subtitle);
             }
         }
+
+        static Assembly LoadPlugin(string pluginLocation)
+        {
+            Console.WriteLine($"Loading commands from: {pluginLocation}");
+            PluginLoadContext loadContext = new PluginLoadContext(pluginLocation);
+            return loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(pluginLocation)));
+        }
+
+        static IEnumerable<ISubtitlesPlugin?> CreatePlugins(Assembly assembly)
+        {
+            int count = 0;
+
+            foreach (Type type in assembly.GetTypes())
+            {
+                if (typeof(ISubtitlesPlugin).IsAssignableFrom(type))
+                {
+                    if (Activator.CreateInstance(type) is ISubtitlesPlugin result)
+                    {
+                        count++;
+                        yield return result;
+                    }
+                }
+            }
+
+            if (count == 0)
+            {
+                string availableTypes = string.Join(",", assembly.GetTypes().Select(t => t.FullName));
+                throw new ApplicationException(
+                    $"Can't find any type which implements ISubtitlesPlugin in {assembly} from {assembly.Location}.\n" +
+                    $"Available types: {availableTypes}");
+            }
+        }
+
+        private void InitPlugins()
+        {
+            // load plugins
+            string globalPluginsPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\plugins\";
+            string[] pluginPaths = Directory.GetFiles(globalPluginsPath, "*.dll");
+
+            IEnumerable<ISubtitlesPlugin> plugins = pluginPaths.SelectMany(pluginPath =>
+            {
+                Assembly pluginAssembly = LoadPlugin(pluginPath);
+                return CreatePlugins(pluginAssembly);
+            }).ToList();
+
+            foreach (var plugin in plugins)
+            {
+                var pluginOpenItem = new MenuItem();
+                pluginOpenItem.Header = plugin.Name;
+                pluginOpenItem.Click += (sender, args) =>
+                {
+                    var dialog = new Microsoft.Win32.OpenFileDialog();
+                    dialog.DefaultExt = plugin.Extension;
+                    dialog.Filter = $"Subtitle Files (*{plugin.Extension})|*{plugin.Extension}";
+
+                    bool? result = dialog.ShowDialog();
+
+                    if (result == true)
+                    {
+                        foreach (var elem in plugin.Load(dialog.FileName))
+                        {
+                            Subtitles.Add(elem);
+                        }
+                    }
+                };
+                SubtitlesOpenMenuItem.Items.Add(pluginOpenItem);
+
+                var pluginSaveItem = new MenuItem();
+                pluginSaveItem.Header = plugin.Name;
+                pluginSaveItem.Click += (sender, args) =>
+                {
+                    var dialog = new Microsoft.Win32.SaveFileDialog();
+                    dialog.FileName = "Translation"; // Default file name
+                    dialog.DefaultExt = plugin.Extension; // Default file extension
+                    dialog.Filter = $"Subtitle Files (*{plugin.Extension})|*{plugin.Extension}";
+
+                    bool? result = dialog.ShowDialog();
+
+                    if (result == true)
+                    {
+                        plugin.Save(dialog.FileName, Subtitles);
+                    }
+                };
+                SubtitlesSaveMenuItem.Items.Add(pluginSaveItem);
+
+                var pluginSaveTranslationItem = new MenuItem();
+                pluginSaveTranslationItem.Header = plugin.Name;
+                pluginSaveTranslationItem.Click += (sender, args) =>
+                {
+                    var dialog = new Microsoft.Win32.SaveFileDialog();
+                    dialog.FileName = "Translation"; // Default file name
+                    dialog.DefaultExt = plugin.Extension; // Default file extension
+                    dialog.Filter = $"Subtitle Files (*{plugin.Extension})|*{plugin.Extension}";
+
+                    bool? result = dialog.ShowDialog();
+
+                    if (result == true)
+                    {
+                        plugin.SaveTranslation(dialog.FileName, Subtitles);
+                    }
+                };
+                SubtitlesSaveTranslationMenuItem.Items.Add(pluginSaveTranslationItem);
+            }
+        }
+
     }
 }
