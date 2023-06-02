@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -195,7 +196,6 @@ namespace SubtitleComposer
 
         private void VideoTimer_Tick(object sender, EventArgs e)
         {
-            // temporarily unsubscribe the event (on value changed event will be produced only on user slider value change)
             VideoPlayerSlider.ValueChanged -= VideoPlayerSlider_OnValueChanged;
 
             VideoPlayerSlider.Value = VideoPlayer.Position.TotalMilliseconds / AppProperties.VideoTotalTime.TotalMilliseconds;
@@ -247,6 +247,16 @@ namespace SubtitleComposer
         private void VideoPlayerVolumeSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             VideoPlayer.Volume = VideoPlayerVolumeSlider.Value;
+        }
+
+        private void VideoPlayerSlider_OnDragStarted(object sender, DragStartedEventArgs e)
+        {
+            PauseVideo();
+        }
+
+        private void VideoPlayerSlider_OnDragCompleted(object sender, DragCompletedEventArgs e)
+        {
+            PlayVideo();
         }
 
         private void AddDataGridContextMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -392,6 +402,5 @@ namespace SubtitleComposer
                 SubtitlesSaveTranslationMenuItem.Items.Add(pluginSaveTranslationItem);
             }
         }
-
     }
 }

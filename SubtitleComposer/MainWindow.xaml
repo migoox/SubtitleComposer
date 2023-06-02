@@ -7,6 +7,18 @@
         mc:Ignorable="d"
         Title="Subtitle Composer" Width="1280" Height="800" MinWidth="640" MinHeight="480" WindowStartupLocation="CenterScreen">
 
+    <Window.Resources>
+        <Style x:Key="TextBoxInError" TargetType="{x:Type TextBox}">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip"
+                            Value="{Binding RelativeSource={x:Static RelativeSource.Self}}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Window.Resources>
+
     <Grid>
         <Grid.Resources>
             <FrameworkElement x:Key="ProxyElement" DataContext="{Binding Path=AppProperties.ShowTranslation}"/>
@@ -40,7 +52,7 @@
                           IsCheckable="True" IsChecked="{Binding Path=AppProperties.ShowTranslation, Mode=TwoWay, NotifyOnSourceUpdated=True}"/> 
             </MenuItem>
             <MenuItem Header="_Help">
-                <MenuItem Name="AboutMenuItem" Header="About..." Click="AboutMenuItem_OnClick"/>
+                <MenuItem Name="AboutMenuItem" Header="About..." Click="AboutMenuItem_OnClick" />
             </MenuItem>
         </Menu>
 
@@ -133,7 +145,9 @@
                         IsMoveToPointEnabled="True" 
                         AllowDrop="True" 
                         Minimum="0"
-                        Maximum="1"/>
+                        Maximum="1" 
+                        Thumb.DragStarted="VideoPlayerSlider_OnDragStarted"
+                        Thumb.DragCompleted="VideoPlayerSlider_OnDragCompleted"/>
 
 
             </DockPanel>
@@ -155,15 +169,31 @@
             </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Show Time" 
-                                    Binding="{Binding ShowTime, Mode=TwoWay, NotifyOnSourceUpdated=True, UpdateSourceTrigger=LostFocus, Converter={StaticResource TimeSpanToStringConverter}}" 
                                     Width="Auto" 
                                     SortDirection="Ascending" 
-                                    CanUserSort="False" />
+                                    CanUserSort="False" >
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="ShowTime" Mode="TwoWay" NotifyOnSourceUpdated="True" ValidatesOnExceptions="True"
+                                 UpdateSourceTrigger="LostFocus" Converter="{StaticResource TimeSpanToStringConverter}">
+                            <Binding.ValidationRules>
+                                <local:TimeSpanValidationRule />
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
 
                 <DataGridTextColumn Header="Hide Time" 
-                                    Binding="{Binding HideTime, Mode=TwoWay, NotifyOnSourceUpdated=True, UpdateSourceTrigger=LostFocus, Converter={StaticResource TimeSpanToStringConverter}}" 
                                     Width="Auto"
-                                    CanUserSort="False" />
+                                    CanUserSort="False">
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="HideTime" Mode="TwoWay" NotifyOnSourceUpdated="True" ValidatesOnExceptions="True"
+                                 UpdateSourceTrigger="LostFocus" Converter="{StaticResource TimeSpanToStringConverter}">
+                            <Binding.ValidationRules>
+                                <local:TimeSpanValidationRule />
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
 
                 <DataGridTextColumn Header="Text" 
                                     Binding="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" 
@@ -204,12 +234,41 @@
                     <Label Grid.Row="1" Grid.Column="0" FontWeight="Bold" Content="Hide"/>
                     <Label Grid.Row="2" Grid.Column="0" FontWeight="Bold" Content="Duration"/>
 
-                    <TextBox Grid.Row="0" Grid.Column="1" 
-                             Text="{Binding ElementName=MainDataGrid, Path=SelectedItem.ShowTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True, Converter={StaticResource TimeSpanToStringConverter}}" Width="100" Height="20" />
-                    <TextBox Grid.Row="1" Grid.Column="1" 
-                             Text="{Binding ElementName=MainDataGrid, Path=SelectedItem.HideTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True, Converter={StaticResource TimeSpanToStringConverter}}" Width="100" Height="20" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Name="DurationTextBox" 
-                             Text="{Binding ElementName=MainDataGrid, Path=SelectedItem.Duration, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True, Converter={StaticResource TimeSpanToStringConverter}}" Width="100" Height="20" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Width="100" Height="20">
+                        <TextBox.Text>
+                            <Binding ElementName="MainDataGrid" 
+                                     Path="SelectedItem.ShowTime" Mode="TwoWay" UpdateSourceTrigger="LostFocus"
+                                     NotifyOnSourceUpdated="True" Converter="{StaticResource TimeSpanToStringConverter}">
+                                <Binding.ValidationRules>
+                                    <local:TimeSpanValidationRule />
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
+                    
+                    <TextBox Grid.Row="1" Grid.Column="1" Width="100" Height="20" >
+                        <TextBox.Text>
+                            <Binding ElementName="MainDataGrid" 
+                                     Path="SelectedItem.HideTime" Mode="TwoWay" UpdateSourceTrigger="LostFocus"
+                                     NotifyOnSourceUpdated="True" Converter="{StaticResource TimeSpanToStringConverter}">
+                                <Binding.ValidationRules>
+                                    <local:TimeSpanValidationRule />
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
+
+                    <TextBox Grid.Row="2" Grid.Column="1" Name="DurationTextBox" Width="100" Height="20">
+                        <TextBox.Text>
+                            <Binding ElementName="MainDataGrid" Path="SelectedItem.Duration" 
+                                     Mode="TwoWay" UpdateSourceTrigger="LostFocus" NotifyOnSourceUpdated="True" Converter="{StaticResource TimeSpanToStringConverter}">
+                                <Binding.ValidationRules>
+                                    <local:TimeSpanValidationRule />
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                        
+                    </TextBox>
                 </Grid>
             </GroupBox>
 
